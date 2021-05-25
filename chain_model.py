@@ -46,19 +46,13 @@ class SupplyChain():
         self.a_hold = 5e-2
         self.a_unsatisfied = 2e-1
         self.reward_coeff = 1e1
-        # add noise to the demand
-        # solve by hand first
-        # try the vanilla policy gradient
-        # soft actor critic  - AC with cross entropy 
-        # try making the holding cost really high and really low
-        # try removing one of the actions
-        # try making the NNs shallower
-        # save the seed I'm on.
+
         
         # get rid of forecast_demand
         self.observation_space = np.zeros((1))
-        self.action_space = space(low = np.array([0,0]), high = np.array([5,2]))
-        # self.action_lim = [5, 2] # price is at most 5, quantity is at most 2.
+        # price is at most 5, quantity is at most 2.
+        self.action_space = space(low = np.array([0,0]), 
+                                  high = np.array([5,2]))
         self.state=np.zeros((self.observation_space.shape[0]))
         
 
@@ -112,8 +106,8 @@ class SupplyChain():
         quantity_sold  = min(demand_out, self.state[0])
         reward = self.reward_coeff *(quantity_sold * cur_price 
                   - quantity_bought * self.constant_price)
-        # holding_cost = self.holding_cost(
-        #     quantity_bought + self.state[0] - quantity_sold)
+        holding_cost = self.holding_cost(
+            quantity_bought + self.state[0] - quantity_sold)
         # demand_penalty = self.demand_unsatisfaction(quantity_sold, demand_out)
         # if debug:
         #     print(f'current inventory {self.state[0]}')
@@ -131,7 +125,7 @@ class SupplyChain():
         #     print(f'demand penalty {demand_penalty}')
         # if self.state[0] <= 0:
         #     print(f'current inventory {self.state[0]}')
-        # reward += -holding_cost
+        reward += -holding_cost
         # reward += -demand_penalty
         
         self.update_state(quantity_bought, quantity_sold)
