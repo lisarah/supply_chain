@@ -48,7 +48,7 @@ class PolicyNetwork(nn.Module):
     def forward(self, state):
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
-        x = torch.sigmoid(self.linear3(x)) * torch.Tensor(self.env.action_lim)
+        x = torch.sigmoid(self.linear3(x)) * torch.Tensor(self.env.action_space.high)
         return x
     
     def get_action(self, state):

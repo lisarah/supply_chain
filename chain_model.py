@@ -5,7 +5,10 @@ Created on Mon May 24 18:26:55 2021
 @author: craba
 """
 import numpy as np
+from collections import namedtuple
 
+
+space = namedtuple('space', ['low', 'high'])
 
 class SupplyChain():
     def __init__(self, T=100):
@@ -54,8 +57,8 @@ class SupplyChain():
         
         # get rid of forecast_demand
         self.observation_space = np.zeros((1))
-        self.action_space = 2
-        self.action_lim = [5, 2] # price is at most 5, quantity is at most 2.
+        self.action_space = space(low = np.array([0,0]), high = np.array([5,2]))
+        # self.action_lim = [5, 2] # price is at most 5, quantity is at most 2.
         self.state=np.zeros((self.observation_space.shape[0]))
         
 
@@ -96,8 +99,10 @@ class SupplyChain():
         
     def step(self, action, debug=False):
         # print(f'action taken {action}')
-        cur_price = min(max(action[0], 0), self.action_lim[0])
-        quantity_bought = min(max(action[1], 0), self.action_lim[1])
+        cur_price = min(max(action[0], self.action_space.low[0]), 
+                        self.action_space.high[0])
+        quantity_bought = min(max(action[1], self.action_space.low[1]), 
+                              self.action_space.high[1])
         if debug:
             print(f'cur_price {cur_price}')
             print(f'quantity_bought {quantity_bought}')

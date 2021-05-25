@@ -53,6 +53,11 @@ class NormalizedActions(gym.ActionWrapper):
   
     
 class OUNoise(object):
+    """Ornstein-Uhlenbeck process. 
+    
+    https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py
+    https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process
+    """
     def __init__(self, action_space, mu=0.0, theta=0.15, max_sigma=0.3, 
                  min_sigma=0.3, decay_period=100000):
         self.mu           = mu
@@ -61,7 +66,7 @@ class OUNoise(object):
         self.max_sigma    = max_sigma
         self.min_sigma    = min_sigma
         self.decay_period = decay_period
-        self.action_dim   = action_space.shape[0]
+        self.action_dim   = action_space.low.shape[0]
         self.low          = action_space.low
         self.high         = action_space.high
         self.reset()
@@ -88,6 +93,7 @@ def plot(rewards, title):
     # plt.subplot(131)
     plt.title(title)
     plt.plot(rewards)
+    plt.grid()
     # fig.legend()
     plt.show() 
     

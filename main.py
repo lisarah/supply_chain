@@ -22,12 +22,13 @@ use_cuda = torch.cuda.is_available()
 device   = torch.device("cuda" if use_cuda else "cpu")
 # env = NormalizedActions(gym.make("Pendulum-v0"))
 env = SupplyChain()
-# ou_noise = ut.OUNoise(env.action_space)
+
 
 # state_dim  = env.observation_space.shape[0]
 state_dim = 1
-# action_dim = env.action_space.shape[0]
-action_dim = 2
+action_dim = env.action_space.low.shape[0]
+ou_noise = ut.OUNoise(env.action_space)
+
 hidden_dim = 256
 
 model = namedtuple('model', ['value_net', 'policy_net', 
@@ -73,7 +74,7 @@ replay_buffer = ut.ReplayBuffer(replay_buffer_size)
 
 # max_epochs  = 15
 # max_steps   = 500
-max_epochs  = 50
+max_epochs  = 30
 max_steps   = 100
 epoch   = 0
 rewards     = []
@@ -84,15 +85,14 @@ sample_policies = []
 sample_policy_at_5  = []
 while epoch < max_epochs:
     state = env.reset()
-#     ou_noise.reset()
+    ou_noise.reset()
     episode_reward = 0
-    print(f'---------episode {epoch}---------')
+    # print(f'episode: ')
     for step in range(max_steps):
-        if step %2 == 0:
-            print(f'\rstep{step}. '
-                  f'reward {np.round(episode_reward/(step+1), 2)}', end='')
+        print(f'\r episode: {epoch} '
+              f'reward {np.round(episode_reward/(step+1), 2)}', end='')
         action = policy_net.get_action(state)
-#         action = ou_noise.get_action(action, step)
+        action = ou_noise.get_action(action, step)
         next_state, reward = env.step(action)
         
         replay_buffer.push(state, action, reward, next_state, False)
@@ -103,7 +103,7 @@ while epoch < max_epochs:
         
         state = next_state
         episode_reward += reward
-    print('') 
+    # print('') 
     rewards.append(episode_reward/max_steps)
     if epoch in sample_epochs:
         sample_policies.append([
@@ -134,7 +134,7 @@ plt.show()
 
 
 plt.figure(figsize=(10,5))
-plt.title('Policy at state {5}')
+plt.title('Policy at inventory= 5')
 for i in range(len(sample_epochs)):
     plt.plot(sample_policy_at_5)
 # plt.legend() 
