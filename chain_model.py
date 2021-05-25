@@ -37,14 +37,14 @@ class SupplyChain():
                 cost = a_unsat * quantity_deficit
         """
         self.demand_mean = 1
-        self.demand_sigma = 0
+        self.demand_sigma = 0.1
         self.a_demand = 2e-1
         self.c_demand = 1
         self.a_price = 5e-1
         self.c_price = 1e0
         self.constant_price = 1e-1
         self.a_hold = 5e-2
-        self.a_unsatisfied = 2e-1
+        self.a_unsatisfied = 5e-2
         self.reward_coeff = 1e1
 
         
@@ -108,7 +108,7 @@ class SupplyChain():
                   - quantity_bought * self.constant_price)
         holding_cost = self.holding_cost(
             quantity_bought + self.state[0] - quantity_sold)
-        # demand_penalty = self.demand_unsatisfaction(quantity_sold, demand_out)
+        demand_penalty = self.demand_unsatisfaction(quantity_sold, demand_out)
         # if debug:
         #     print(f'current inventory {self.state[0]}')
         #     print(f'holding cost {holding_cost}')
@@ -126,7 +126,7 @@ class SupplyChain():
         # if self.state[0] <= 0:
         #     print(f'current inventory {self.state[0]}')
         reward += -holding_cost
-        # reward += -demand_penalty
+        reward += -demand_penalty
         
         self.update_state(quantity_bought, quantity_sold)
         

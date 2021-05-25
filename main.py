@@ -74,8 +74,8 @@ replay_buffer = ut.ReplayBuffer(replay_buffer_size)
 
 # max_epochs  = 15
 # max_steps   = 500
-max_epochs  = 30
-max_steps   = 250
+max_epochs  = 50
+max_steps   = 300
 epoch   = 0
 rewards     = []
 batch_size  = 128
