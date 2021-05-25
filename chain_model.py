@@ -109,22 +109,7 @@ class SupplyChain():
         holding_cost = self.holding_cost(
             quantity_bought + self.state[0] - quantity_sold)
         demand_penalty = self.demand_unsatisfaction(quantity_sold, demand_out)
-        # if debug:
-        #     print(f'current inventory {self.state[0]}')
-        #     print(f'holding cost {holding_cost}')
-        #     print(f'demand penalty {demand_penalty}')
-        # if holding_cost > 1e0:
-            
-        #     # print(f'demand = {cur_demand}')
-        #     # print(f'bought ={quantity_bought}, sold = {quantity_sold}')
-        #     # print(f'inventory = {self.state[0]}')
-        #     print(f'holding cost {holding_cost}')
-        # if demand_penalty > 0.1:
-        #     # print(f'quantity sold {quantity_sold}')
-        #     # print(f'demand {cur_demand}')
-        #     print(f'demand penalty {demand_penalty}')
-        # if self.state[0] <= 0:
-        #     print(f'current inventory {self.state[0]}')
+       
         reward += -holding_cost
         reward += -demand_penalty
         
