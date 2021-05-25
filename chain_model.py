@@ -43,7 +43,7 @@ class SupplyChain():
         self.a_price = 5e-1
         self.c_price = 1e0
         self.constant_price = 1e-1
-        self.a_hold = 5e-1
+        self.a_hold = 5e-2
         self.a_unsatisfied = 2e-1
         self.reward_coeff = 1e1
         # add noise to the demand
@@ -70,7 +70,9 @@ class SupplyChain():
         return max(Q - self.a_demand * max(price, 0), 0)
     
     def linear_demand(self, price):
-        return max(self.c_demand - self.a_demand * price , 0)
+        demand = max(self.c_demand - self.a_demand * price , 0)
+        demand += np.random.normal(0, self.demand_sigma) # add noise
+        return demand
     
     def linear_price(self, quantity):
         return max(self.a_price - self.a_price * quantity )
@@ -108,7 +110,8 @@ class SupplyChain():
             print(f'quantity_bought {quantity_bought}')
         demand_out = self.linear_demand(cur_price)
         quantity_sold  = min(demand_out, self.state[0])
-        reward = self.reward_coeff * quantity_sold * cur_price # - quantity_bought * self.constant_price
+        reward = self.reward_coeff *(quantity_sold * cur_price 
+                  - quantity_bought * self.constant_price)
         # holding_cost = self.holding_cost(
         #     quantity_bought + self.state[0] - quantity_sold)
         # demand_penalty = self.demand_unsatisfaction(quantity_sold, demand_out)
