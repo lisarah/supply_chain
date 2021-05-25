@@ -83,12 +83,26 @@ class OUNoise(object):
         return np.clip(action + ou_state, self.low, self.high)
     
     
-def plot(frame_idx, rewards):
-    plt.figure(figsize=(20,5))
-    plt.subplot(131)
-    plt.title('frame %s. reward: %s' % (frame_idx, rewards[-1]))
+def plot(rewards, title):
+    plt.figure(figsize=(10,5))
+    # plt.subplot(131)
+    plt.title(title)
     plt.plot(rewards)
+    # fig.legend()
     plt.show() 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

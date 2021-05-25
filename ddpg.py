@@ -13,9 +13,8 @@ import torch
 use_cuda = torch.cuda.is_available()
 device   = torch.device("cuda" if use_cuda else "cpu")
 
-def ddpg_update(model, criterion, optimizers, replay_buffer, batch_size,
-                 gamma = 0.99, min_value=-np.inf, max_value=np.inf, 
-                 soft_tau=1e-2):
+def update(model, criterion, optimizers, replay_buffer, batch_size, 
+           gamma = 0.99, min_value=-np.inf, max_value=np.inf, soft_tau=1e-2):
     
     state, action, reward, next_state, done = replay_buffer.sample(batch_size)
     

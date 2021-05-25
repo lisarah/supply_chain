@@ -5,6 +5,8 @@ Created on Mon May 24 16:59:07 2021
 @author: Sarah Li
 """
 from collections import namedtuple
+import numpy as np
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
@@ -69,41 +71,75 @@ replay_buffer_size = 1000000
 replay_buffer = ut.ReplayBuffer(replay_buffer_size)
 
 
-max_frames  = 12000
-max_steps   = 500
-frame_idx   = 0
+# max_epochs  = 15
+# max_steps   = 500
+max_epochs  = 50
+max_steps   = 100
+epoch   = 0
 rewards     = []
 batch_size  = 128
-
-
-while frame_idx < max_frames:
+sample_epochs = [0, int(max_epochs/2), max_epochs-1]
+sample_states = [np.array([i*0.1]) for i in range(100)]
+sample_policies = []
+sample_policy_at_5  = []
+while epoch < max_epochs:
     state = env.reset()
 #     ou_noise.reset()
     episode_reward = 0
-    if frame_idx %100 == 0:
-        print(f'\r  step{frame_idx}', end='')
+    print(f'---------episode {epoch}---------')
     for step in range(max_steps):
-        
+        if step %2 == 0:
+            print(f'\rstep{step}. '
+                  f'reward {np.round(episode_reward/(step+1), 2)}', end='')
         action = policy_net.get_action(state)
 #         action = ou_noise.get_action(action, step)
         next_state, reward = env.step(action)
         
         replay_buffer.push(state, action, reward, next_state, False)
         if len(replay_buffer) > batch_size:
-            ddpg.ddpg_update(ddpg_model, value_criterion, ddpg_optimizer, 
-                             replay_buffer, batch_size)
+            ddpg.update(ddpg_model, value_criterion, ddpg_optimizer, 
+                        replay_buffer, batch_size)
+        sample_policy_at_5.append(policy_net.get_action(np.array([5])))
         
         state = next_state
         episode_reward += reward
-        frame_idx += 1
+    print('') 
+    rewards.append(episode_reward/max_steps)
+    if epoch in sample_epochs:
+        sample_policies.append([
+                policy_net.get_action(s) for s in sample_states])
+    epoch += 1
     
-    rewards.append(episode_reward)
+
+ut.plot(rewards, 'average return per epoch')
+plt.figure(figsize=(10,5))
+plt.title('Evolving policy - price')
+for i in range(len(sample_epochs)):
+    plt.plot(sample_states,
+             [sample_policies[i][j][0] for j in range(len(sample_states))], 
+             label=f'{sample_epochs[i]}')
+plt.legend() 
+plt.grid()
+plt.show() 
+
+plt.figure(figsize=(10,5))
+plt.title('Evolving policy - quantity')
+for i in range(len(sample_epochs)):
+    plt.plot(sample_states,
+             [sample_policies[i][j][1] for j in range(len(sample_states))], 
+             label=f'{sample_epochs[i]}')
+plt.legend() 
+plt.grid()
+plt.show() 
 
 
-ut.plot(frame_idx, rewards)
-
-
-
+plt.figure(figsize=(10,5))
+plt.title('Policy at state {5}')
+for i in range(len(sample_epochs)):
+    plt.plot(sample_policy_at_5)
+# plt.legend() 
+plt.grid()
+plt.show() 
 
 
 
