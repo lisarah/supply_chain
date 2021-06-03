@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 24 18:26:55 2021
+Created on Wed Jun  2 12:07:53 2021
 
 @author: Sarah Li
 """
@@ -36,7 +36,7 @@ class SupplyChain():
             Demand unsatisfaction cost: 
                 cost = a_unsat * quantity_deficit
         """
-        self.demand_sigma = 0.1
+        self.demand_sigma = 0.02
         self.a_demand = 2e-1
         self.c_demand = 1
         self.a_price = 5e-1
@@ -51,20 +51,16 @@ class SupplyChain():
         self.observation_space = np.zeros((2))
         # price is at most 5, quantity is at most 2.
         self.action_space = space(low = np.array([0,0]), 
-                                  high = np.array([4,2]))
+                                  high = np.array([5,2]))
         self.state=np.zeros((self.observation_space.shape[0]))
         
 
         self.reset()
     
-    # def get_random_demand(self, price):
-    #     Q = self.state[0] #+ np.random.normal(0, self.demand_sigma)
-    #     # price cannot be negative.
-    #     return max(Q - self.a_demand * max(price, 0), 0)
-    
     def linear_demand(self, price):
         demand = max(self.c_demand - self.a_demand * price , 0)
         demand += np.random.normal(0, self.demand_sigma) # add noise
+
         return demand
     
     def linear_price(self, quantity):
@@ -78,21 +74,24 @@ class SupplyChain():
     
     def reset(self):
         self.state[0] = np.random.uniform(0, 10)# current inventory
-        self.state[1] = self.constant_price # cost per item bought
-        # self.state[2] = max(np.random.normal(self.demand_mean,self.demand_sigma), 0) # demand_forecast #1
-        # self.state[3] = max(np.random.normal(self.demand_mean,self.demand_sigma), 0) # demand_forecast #2
+        # self.state[1] = np.random.uniform(self.action_space.low[0], 
+        #                                   self.action_space.high[0]) # estimated price
         
         return self.state.copy()
+    
+    def update_buying_price(self, p_in):
+        self.state[1] = p_in
         
     def update_state(self, quantity_bought, quantity_sold):
         self.state[0] += - quantity_sold + quantity_bought
-        self.state[0] = min(10, max(self.state[0], 0))
+        # self.state[0] = min(10, max(self.state[0], 0))
+        # self.state[1] = p_in * 0.1 + self.state[1] * 0.9
         # cost per item stays constant for now
         # self.state[2] = 1* self.state[3]
         # self.state[3] = max(np.random.normal(self.demand_mean,
         #                                      self.demand_sigma), 0) 
         
-    def step(self, action, debug=False):
+    def step(self, action, a_prev, a_next, debug=False):
         # print(f'action taken {action}')
         cur_price = min(max(action[0], self.action_space.low[0]), 
                         self.action_space.high[0])
@@ -101,10 +100,10 @@ class SupplyChain():
         if debug:
             print(f'cur_price {cur_price}')
             print(f'quantity_bought {quantity_bought}')
-        demand_out = self.linear_demand(cur_price)
-        quantity_sold  = min(demand_out, self.state[0])
+
+        quantity_sold  = min(a_next[1], self.state[0])
         reward = self.reward_coeff *(quantity_sold * cur_price 
-                  - quantity_bought * self.constant_price)
+                  - quantity_bought * a_prev[0])
         # holding_cost = self.holding_cost(
         #     quantity_bought + self.state[0] - quantity_sold)
         # demand_penalty = self.demand_unsatisfaction(quantity_sold, demand_out)
