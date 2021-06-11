@@ -23,6 +23,8 @@ def update(model, criterion, optimizers, replay_buffer, batch_size,
     reward     = torch.FloatTensor(reward).unsqueeze(1).to(device)
     done       = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
 
+    print(state.shape)
+    print(model.policy_net(state).shape)
     policy_loss = model.value_net(state, model.policy_net(state))
     policy_loss = -policy_loss.mean()
 

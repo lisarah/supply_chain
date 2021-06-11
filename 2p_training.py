@@ -26,7 +26,7 @@ device   = torch.device("cuda" if use_cuda else "cpu")
 
 players = [
     {'chain': SupplyChain()},
-    # {'chain': SupplyChain()}
+    {'chain': SupplyChain()}
     ]
 p_num = len(players)
 # all players have identical state-action spaces
@@ -85,7 +85,8 @@ rewards     = [[] for p in players]
 batch_size  = 128
 sample_epochs = [0, int(max_epochs/2), max_epochs-1]
 constant_price = 2.5
-sample_states = [np.array([i*0.1, constant_price]) for i in range(100)]
+sample_states = [torch.FloatTensor([i*0.1, constant_price]).to(device) 
+                 for i in range(100)]
 sample_policy  = [[] for p in players]
 sample_inventory = 2.5
 a_0= np.array([1e-1, None])
@@ -98,8 +99,8 @@ while epoch < max_epochs:
     # print(f'episode: ')
     for step in range(max_steps):
         print(f'\r episode: {epoch} '
-              f'r1 {np.round(players[0]["episode_reward"]/(step+1), 2)} ',
-              # f'r2 {np.round(players[1]["episode_reward"]/(step+1), 2)}', 
+              f'r1 {np.round(players[0]["episode_reward"]/(step+1), 2)}  ',
+               f'r2 {np.round(players[1]["episode_reward"]/(step+1), 2)}  ', 
               end='')  
         
         for p_ind in range(len(players)):
@@ -107,7 +108,7 @@ while epoch < max_epochs:
             players[p_ind]['state'] = players[p_ind]['chain'].state
             # find the action at current state    
             action = players[p_ind]['model'].policy_net.get_action(
-                players[p_ind]['state']) 
+                torch.FloatTensor(players[p_ind]['state']).to(device)) 
             players[p_ind]['action'] = players[p_ind]['noise'].get_action(action, step)
             
         for p_ind in range(len(players)):
@@ -136,8 +137,10 @@ while epoch < max_epochs:
                         p['replay_buffer'], batch_size)
             p['state'] = next_state
             p['episode_reward'] += reward
-            sample_policy[p_ind].append(p['model'].policy_net.get_action(
-                np.array([sample_inventory,  p['chain'].state[1]])))
+            sample_state = torch.FloatTensor([sample_inventory, 
+                                              p['chain'].state[1]]).to(device)
+            sample_policy[p_ind].append(
+                p['model'].policy_net.get_action(sample_state))
             
     # print('') 
     for i in range(len(players)):
@@ -178,7 +181,7 @@ plt.show()
 plt.figure(figsize=(10,5))
 plt.title(f'Price at inventory= {sample_inventory}')
 for i in range(len(sample_policy)):
-    plt.plot([sample_policy[i][j][0] 
+    plt.plot([sample_policy[j][0] #[i][j][0]
               for j in range(len(sample_policy[i]))], label=f'{i} price')
 plt.legend() 
 plt.grid()

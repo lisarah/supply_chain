@@ -63,10 +63,10 @@ momentum_values = [0.01]
 rewards_list = []
 for momentum in momentum_values:
     print(f'Solving momentum = {momentum}')
-    policy_optimizer = torch.optim.SGD(policy_net.parameters(), 
-                                       lr=policy_lr, momentum=momentum)
+    # policy_optimizer = torch.optim.SGD(policy_net.parameters(), 
+    #                                    lr=policy_lr, momentum=momentum)
     value_optimizer  = optim.Adam(value_net.parameters(),  lr=value_lr)
-    # policy_optimizer = optim.Adam(policy_net.parameters(), lr=policy_lr)
+    policy_optimizer = optim.Adam(policy_net.parameters(), lr=policy_lr)
     
     ddpg_optimizer = optimizers(value_optimizer=value_optimizer, 
                   policy_optimizer=policy_optimizer)
@@ -96,23 +96,27 @@ for momentum in momentum_values:
         for step in range(max_steps):
             print(f'\r episode: {epoch} '
                   f'reward {np.round(episode_reward/(step+1), 2)}', end='')
-            action = policy_net.get_action(state)
+            action = policy_net.get_action(
+                torch.FloatTensor(state).unsqueeze(0).to(device).float())
             action = ou_noise.get_action(action, step)
             next_state, reward = env.step(action)
+
             
             replay_buffer.push(state, action, reward, next_state, False)
             if len(replay_buffer) > batch_size:
                 ddpg.update(ddpg_model, value_criterion, ddpg_optimizer, 
                             replay_buffer, batch_size)
-            sample_policy_at_5.append(policy_net.get_action(np.array([5, env.constant_price])))
+            sample_state = torch.FloatTensor([5, env.constant_price]).to(device)
+            sample_policy_at_5.append(policy_net.get_action(sample_state))
+            
             
             state = next_state
             episode_reward += reward
 
         rewards.append(episode_reward/max_steps)
         if epoch in sample_epochs:
-            sample_policies.append([
-                    policy_net.get_action(s) for s in sample_states])
+            sample_policies.append([policy_net.get_action(
+                torch.tensor(s).to(device).float()) for s in sample_states])
         epoch += 1
     rewards_list.append(rewards.copy())
     print(f'reward {np.round(rewards[-1]/max_steps, 2)}                    ')
@@ -148,13 +152,13 @@ plt.show()
 # plt.show() 
 
 
-# plt.figure(figsize=(10,5))
-# plt.title('Policy at inventory= 5')
-# for i in range(len(sample_epochs)):
-#     plt.plot(sample_policy_at_5)
-# # plt.legend() 
-# plt.grid()
-# plt.show() 
+plt.figure(figsize=(10,5))
+plt.title('Policy at inventory= 5')
+for i in range(len(sample_epochs)):
+    plt.plot(sample_policy_at_5)
+# plt.legend() 
+plt.grid()
+plt.show() 
 
 
 

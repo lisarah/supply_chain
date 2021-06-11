@@ -26,6 +26,7 @@ class ValueNetwork(nn.Module):
         
     def forward(self, state, action):
         x = torch.cat([state, action], 1)
+        # print(x.shape)
         x = F.relu(self.linear1(x))
         x = F.relu(self.linear2(x))
         x = self.linear3(x)
@@ -48,10 +49,10 @@ class PolicyNetwork(nn.Module):
     def forward(self, state):
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
-        x = torch.sigmoid(self.linear3(x)) * torch.Tensor(self.env.action_space.high)
+        x = torch.sigmoid(self.linear3(x)) * torch.Tensor(
+            self.env.action_space.high).to(device)
         return x
     
     def get_action(self, state):
-        state  = torch.FloatTensor(state).unsqueeze(0).to(device)
         action = self.forward(state)
         return action.detach().cpu().numpy()[0]

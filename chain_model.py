@@ -51,7 +51,7 @@ class SupplyChain():
         self.observation_space = np.zeros((2))
         # price is at most 5, quantity is at most 2.
         self.action_space = space(low = np.array([0,0]), 
-                                  high = np.array([4,2]))
+                                  high = np.array([10,5]))
         self.state=np.zeros((self.observation_space.shape[0]))
         
 
@@ -82,7 +82,7 @@ class SupplyChain():
         # self.state[2] = max(np.random.normal(self.demand_mean,self.demand_sigma), 0) # demand_forecast #1
         # self.state[3] = max(np.random.normal(self.demand_mean,self.demand_sigma), 0) # demand_forecast #2
         
-        return self.state.copy()
+        return self.state
         
     def update_state(self, quantity_bought, quantity_sold):
         self.state[0] += - quantity_sold + quantity_bought

@@ -74,8 +74,8 @@ class SupplyChain():
     
     def reset(self):
         self.state[0] = np.random.uniform(0, 10)# current inventory
-        # self.state[1] = np.random.uniform(self.action_space.low[0], 
-        #                                   self.action_space.high[0]) # estimated price
+        self.state[1] = np.random.uniform(self.action_space.low[0], 
+                                          self.action_space.high[0]) # estimated price
         
         return self.state.copy()
     
