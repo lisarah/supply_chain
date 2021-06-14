@@ -79,7 +79,7 @@ for momentum in momentum_values:
     
     # max_epochs  = 15
     # max_steps   = 500
-    max_epochs  = 600
+    max_epochs  = 500
     max_steps   = 10
     epoch   = 0
     rewards     = []

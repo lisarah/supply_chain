@@ -25,9 +25,9 @@ use_cuda = torch.cuda.is_available()
 device   = torch.device("cuda" if use_cuda else "cpu")
 
 players = [
-    {'chain': SupplyChain(7, 1)}, # farmer
-    {'chain': SupplyChain(7, 1)}, # farmer
-    {'chain': SupplyChain(7, 1)}, # farmer
+    {'chain': SupplyChain(7, 5)}, # farmer
+    {'chain': SupplyChain(7, 5)}, # farmer
+    # {'chain': SupplyChain(7, 5)}, # farmer
     {'chain': SupplyChain(7, 10)} # distributor
     ]
 p_num = len(players)
@@ -82,7 +82,7 @@ for player in players:
 # max_steps   = 500
 max_epochs  = 100
 max_steps   = 40
-epoch   = 0
+epoch  = 0
 rewards     = [[] for p in players]
 batch_size  = 128
 sample_epochs = [0, int(max_epochs/2), max_epochs-1]
@@ -101,7 +101,9 @@ while epoch < max_epochs:
     for step in range(max_steps):
         print(f'\r episode: {epoch} '
               f'r1 {np.round(players[0]["episode_reward"]/(step+1), 2)} ',
-                f'r2 {np.round(players[1]["episode_reward"]/(step+1), 2)}', 
+              f'r2 {np.round(players[1]["episode_reward"]/(step+1), 2)}', 
+               f'r3 {np.round(players[2]["episode_reward"]/(step+1), 2)}',
+              # f'r4 {np.round(players[3]["episode_reward"]/(step+1), 2)}', 
               end='')  
         for p_ind in range(len(players)):
             # update pstate
@@ -155,16 +157,16 @@ print('')
 plt.figure(figsize=(10,5))
 plt.title('average reward')
 [plt.plot(rewards[i], label = f'{i}') for i in range(len(players))]
-plt.ylim([0,30])
+# plt.ylim([0,30])
 plt.legend() 
 plt.grid()
 plt.show()
 
 plt.figure()
-total_reward = [rewards[0][i] + rewards[1][i] + rewards[2][i] + rewards[3][i] 
+total_reward = [sum([rewards[0][j] for j in range(len(players))])
                 for i in range(len(rewards[0]))]
 plt.plot([rewards[0][i] + rewards[1][i] for i in range(len(rewards[0]))], label='sum ')
-plt.ylim([0,30])
+# plt.ylim([0,30])
 plt.legend() 
 plt.grid()
 plt.show()
