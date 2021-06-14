@@ -64,7 +64,7 @@ rewards_list = []
 for momentum in momentum_values:
     print(f'Solving momentum = {momentum}')
     policy_optimizer = torch.optim.SGD(policy_net.parameters(), 
-                                       lr=policy_lr, momentum=momentum)
+                                        lr=policy_lr, momentum=momentum)
     value_optimizer  = optim.Adam(value_net.parameters(),  lr=value_lr)
     # policy_optimizer = optim.Adam(policy_net.parameters(), lr=policy_lr)
     
@@ -79,8 +79,8 @@ for momentum in momentum_values:
     
     # max_epochs  = 15
     # max_steps   = 500
-    max_epochs  = 25
-    max_steps   = 300
+    max_epochs  = 600
+    max_steps   = 10
     epoch   = 0
     rewards     = []
     batch_size  = 128
@@ -148,13 +148,13 @@ plt.show()
 # plt.show() 
 
 
-# plt.figure(figsize=(10,5))
-# plt.title('Policy at inventory= 5')
-# for i in range(len(sample_epochs)):
-#     plt.plot(sample_policy_at_5)
-# # plt.legend() 
-# plt.grid()
-# plt.show() 
+plt.figure(figsize=(10,5))
+plt.title('Policy at inventory= 5')
+for i in range(len(sample_epochs)):
+    plt.plot(sample_policy_at_5)
+# plt.legend() 
+plt.grid()
+plt.show() 
 
 
 

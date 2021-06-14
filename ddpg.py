@@ -9,7 +9,7 @@ import numpy as np
 import torch
 
 
-use_cuda = torch.cuda.is_available()
+use_cuda =  torch.cuda.is_available()
 device   = torch.device("cuda" if use_cuda else "cpu")
 
 def update(model, criterion, optimizers, replay_buffer, batch_size, 

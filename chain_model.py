@@ -51,7 +51,7 @@ class SupplyChain():
         self.observation_space = np.zeros((2))
         # price is at most 5, quantity is at most 2.
         self.action_space = space(low = np.array([0,0]), 
-                                  high = np.array([4,2]))
+                                  high = np.array([10,2]))
         self.state=np.zeros((self.observation_space.shape[0]))
         
 
