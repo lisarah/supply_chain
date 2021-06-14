@@ -26,7 +26,7 @@ device   = torch.device("cuda" if use_cuda else "cpu")
 
 players = [
     {'chain': SupplyChain()},
-    # {'chain': SupplyChain()}
+    {'chain': SupplyChain()}
     ]
 p_num = len(players)
 # all players have identical state-action spaces
@@ -44,11 +44,11 @@ replay_buffer_size = 1000000
 for player in players:
     player['model'] = model(**{
         'value_net': nets.ValueNetwork(
-        state_dim * p_num, action_dim * p_num, hidden_dim).to(device),
+        state_dim, action_dim, hidden_dim).to(device),
         'policy_net': nets.PolicyNetwork(
         player['chain'], state_dim, action_dim, hidden_dim).to(device),
         'target_value_net': nets.ValueNetwork(
-        state_dim * p_num, action_dim * p_num, hidden_dim).to(device),
+        state_dim, action_dim, hidden_dim).to(device),
         'target_policy_net':  nets.PolicyNetwork(
         player['chain'], state_dim, action_dim, hidden_dim).to(device)
         }) # ddpg_model
@@ -78,13 +78,13 @@ for player in players:
 # simultaneous training, different objectives
 # max_epochs  = 15
 # max_steps   = 500
-max_epochs  = 50
-max_steps   = 200
+max_epochs  = 100
+max_steps   = 40
 epoch   = 0
 rewards     = [[] for p in players]
 batch_size  = 128
 sample_epochs = [0, int(max_epochs/2), max_epochs-1]
-constant_price = 2.5
+constant_price = 1e-1
 sample_states = [np.array([i*0.1, constant_price]) for i in range(100)]
 sample_policy  = [[] for p in players]
 sample_inventory = 2.5
@@ -99,9 +99,8 @@ while epoch < max_epochs:
     for step in range(max_steps):
         print(f'\r episode: {epoch} '
               f'r1 {np.round(players[0]["episode_reward"]/(step+1), 2)} ',
-              # f'r2 {np.round(players[1]["episode_reward"]/(step+1), 2)}', 
+                f'r2 {np.round(players[1]["episode_reward"]/(step+1), 2)}', 
               end='')  
-        
         for p_ind in range(len(players)):
             # update pstate
             players[p_ind]['state'] = players[p_ind]['chain'].state
@@ -109,16 +108,15 @@ while epoch < max_epochs:
             action = players[p_ind]['model'].policy_net.get_action(
                 players[p_ind]['state']) 
             players[p_ind]['action'] = players[p_ind]['noise'].get_action(action, step)
-            
+            # print(f'player {p_ind} action {players[p_ind]["action"]}')
         for p_ind in range(len(players)):
-            
             p_next = p_ind + 1
             if p_next < len(players):
                 incoming_demand = players[p_next]['action'][1]
             else:
-
                 incoming_demand = players[p_ind]['chain'].linear_demand(
                     players[p_ind]['action'][0])
+            # print(f' player {p_ind} faces demand {incoming_demand}')
             a_prev = a_0 if p_ind == 0 else players[p_ind-1]['action']
             a_next = np.array([
                 None, 
@@ -129,29 +127,40 @@ while epoch < max_epochs:
             next_state, reward = players[p_ind]['chain'].step(
                 players[p_ind]['action'], a_prev, a_next)
 
-            p['replay_buffer'].push(p['state'], p['action'], reward, 
-                                    next_state, False)
-            if len(p['replay_buffer']) > batch_size:
-                ddpg.update(p['model'], p['value_criterion'], p['optimizer'], 
-                        p['replay_buffer'], batch_size)
-            p['state'] = next_state
-            p['episode_reward'] += reward
-            sample_policy[p_ind].append(p['model'].policy_net.get_action(
-                np.array([sample_inventory,  p['chain'].state[1]])))
+            players[p_ind]['replay_buffer'].push(
+                players[p_ind]['state'], players[p_ind]['action'], reward, 
+                next_state, False)
+            if len(players[p_ind]['replay_buffer']) > batch_size:
+                ddpg.update(players[p_ind]['model'], 
+                            players[p_ind]['value_criterion'], 
+                            players[p_ind]['optimizer'], 
+                            players[p_ind]['replay_buffer'], batch_size)
+            players[p_ind]['state'] = next_state
+            players[p_ind]['episode_reward'] += reward
+            sample_policy[p_ind].append(
+                players[p_ind]['model'].policy_net.get_action(
+                    np.array([sample_inventory,  
+                              players[p_ind]['chain'].state[1]])))
             
     # print('') 
     for i in range(len(players)):
-        rewards[i].append(players[i]['episode_reward']/max_steps)
+        rewards[i].append(players[i]['episode_reward'] / max_steps)
     epoch += 1
 
 print('')
 plt.figure(figsize=(10,5))
 plt.title('average reward')
 [plt.plot(rewards[i], label = f'{i}') for i in range(len(players))]
+
 plt.legend() 
 plt.grid()
 plt.show()
 
+plt.figure()
+plt.plot([rewards[0][i] + rewards[1][i] for i in range(len(rewards[0]))], label='sum ')
+plt.legend() 
+plt.grid()
+plt.show()
 # ut.plot(rewards, 'average return per epoch')
 # plt.figure(figsize=(10,5))
 # inventory_level = [state[0] for state in sample_states]
