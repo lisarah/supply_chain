@@ -25,8 +25,10 @@ use_cuda = torch.cuda.is_available()
 device   = torch.device("cuda" if use_cuda else "cpu")
 
 players = [
-    {'chain': SupplyChain()},
-    {'chain': SupplyChain()}
+    {'chain': SupplyChain(7, 1)}, # farmer
+    {'chain': SupplyChain(7, 1)}, # farmer
+    {'chain': SupplyChain(7, 1)}, # farmer
+    {'chain': SupplyChain(7, 10)} # distributor
     ]
 p_num = len(players)
 # all players have identical state-action spaces
@@ -112,18 +114,20 @@ while epoch < max_epochs:
         for p_ind in range(len(players)):
             p_next = p_ind + 1
             if p_next < len(players):
-                incoming_demand = players[p_next]['action'][1]
+                incoming_demand = players[len(players) - 1]['action'][1] / (len(players) - 1)
             else:
                 incoming_demand = players[p_ind]['chain'].linear_demand(
                     players[p_ind]['action'][0])
             # print(f' player {p_ind} faces demand {incoming_demand}')
-            a_prev = a_0 if p_ind == 0 else players[p_ind-1]['action']
+            # price set by downstream member
+            a_prev = a_0 if p_ind != len(players) - 1 else sum([
+                players[i]['action'] for i in range(len(players) - 1)]) / (len(players) - 1)
             a_next = np.array([
                 None, 
                 players[p_ind]['chain'].linear_demand(
                     players[p_ind]['action'][0])])
             if p_ind + 1 < len(players):
-                a_next = players[p_ind+1]['action']
+                a_next = players[len(players) - 1]['action'] / ((len(players) - 1))
             next_state, reward = players[p_ind]['chain'].step(
                 players[p_ind]['action'], a_prev, a_next)
 
@@ -151,13 +155,16 @@ print('')
 plt.figure(figsize=(10,5))
 plt.title('average reward')
 [plt.plot(rewards[i], label = f'{i}') for i in range(len(players))]
-
+plt.ylim([0,30])
 plt.legend() 
 plt.grid()
 plt.show()
 
 plt.figure()
+total_reward = [rewards[0][i] + rewards[1][i] + rewards[2][i] + rewards[3][i] 
+                for i in range(len(rewards[0]))]
 plt.plot([rewards[0][i] + rewards[1][i] for i in range(len(rewards[0]))], label='sum ')
+plt.ylim([0,30])
 plt.legend() 
 plt.grid()
 plt.show()

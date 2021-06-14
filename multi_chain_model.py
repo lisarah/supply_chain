@@ -11,7 +11,7 @@ from collections import namedtuple
 space = namedtuple('space', ['low', 'high'])
 
 class SupplyChain():
-    def __init__(self, T=100):
+    def __init__(self, price_capacity=7, storage_capacity = 1, T=100):
         """ Obeservation space:
             - curent inventory - Q_c
             
@@ -36,8 +36,8 @@ class SupplyChain():
             Demand unsatisfaction cost: 
                 cost = a_unsat * quantity_deficit
         """
-        self.demand_sigma = 0.02
-        self.a_demand = 2e-1
+        self.demand_sigma = 1e-3
+        self.a_demand = 2e-4
         self.c_demand = 1
         self.a_price = 5e-1
         self.c_price = 1e0
@@ -51,7 +51,7 @@ class SupplyChain():
         self.observation_space = np.zeros((2))
         # price is at most 5, quantity is at most 2.
         self.action_space = space(low = np.array([0,0]), 
-                                  high = np.array([7,1]))
+                                  high = np.array([price_capacity,storage_capacity]))
         self.state=np.zeros((self.observation_space.shape[0]))
         
 
@@ -102,6 +102,7 @@ class SupplyChain():
             print(f'quantity_bought {quantity_bought}')
 
         quantity_sold  = min(a_next[1], self.state[0])
+        print(f'quantity sold = {np.round(quantity_sold, 2)}', end = '  ')
         reward = self.reward_coeff *(quantity_sold * cur_price 
                   - quantity_bought * a_prev[0])
         # holding_cost = self.holding_cost(
