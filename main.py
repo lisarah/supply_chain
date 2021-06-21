@@ -14,14 +14,14 @@ import torch.optim as optim
 import ddpg as ddpg
 
 import actor_critic_nn as nets
-from chain_model import SupplyChain
+from multi_chain_model import SupplyChain
 import util as ut
 
 
 use_cuda = torch.cuda.is_available()
 device   = torch.device("cuda" if use_cuda else "cpu")
 # env = NormalizedActions(gym.make("Pendulum-v0"))
-env = SupplyChain()
+env = SupplyChain(7, 10)
 
 
 state_dim  = env.observation_space.shape[0]
@@ -98,7 +98,10 @@ for momentum in momentum_values:
                   f'reward {np.round(episode_reward/(step+1), 2)}', end='')
             action = policy_net.get_action(state)
             action = ou_noise.get_action(action, step)
-            next_state, reward = env.step(action)
+            incoming_price = 1e-1
+            incoming_demand = env.linear_demand(action[0])
+            next_state, reward = env.step(action, incoming_price, 
+                                          incoming_demand)
             
             replay_buffer.push(state, action, reward, next_state, False)
             if len(replay_buffer) > batch_size:

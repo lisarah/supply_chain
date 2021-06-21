@@ -9,7 +9,7 @@ from collections import namedtuple
 
 
 space = namedtuple('space', ['low', 'high'])
-
+        
 class SupplyChain():
     def __init__(self, T=100):
         """ Obeservation space:

@@ -101,10 +101,10 @@ class SupplyChain():
             print(f'cur_price {cur_price}')
             print(f'quantity_bought {quantity_bought}')
 
-        quantity_sold  = min(a_next[1], self.state[0])
+        quantity_sold  = min(a_next, self.state[0])
         # print(f'quantity sold = {np.round(quantity_sold, 2)}', end = '  ')
         reward = self.reward_coeff *(quantity_sold * cur_price 
-                  - quantity_bought * a_prev[0])
+                  - quantity_bought * a_prev)
         # holding_cost = self.holding_cost(
         #     quantity_bought + self.state[0] - quantity_sold)
         # demand_penalty = self.demand_unsatisfaction(quantity_sold, demand_out)
